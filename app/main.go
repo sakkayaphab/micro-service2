@@ -15,24 +15,25 @@ import (
 
 func main() {
 
-	topic := "message"
-	partition := 0
-
-	conn, err := kafka.DialLeader(context.Background(), "tcp", "kafka:9092", topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
+	w := &kafka.Writer{
+		Addr:     kafka.TCP(os.Getenv("KAFKA")),
+		Topic:   "message",
+		Balancer: &kafka.RoundRobin{},
 	}
 
-	err = conn.SetWriteDeadline(time.Time{})
-	if err!=nil {
-		log.Fatal(err)
-	}
+	//topic := "message"
+	//partition := 0
+	//
+	//conn, err := kafka.DialLeader(context.Background(), "tcp", os.Getenv("KAFKA"), topic, partition)
+	//if err != nil {
+	//	log.Fatal("failed to dial leader:", err)
+	//}
 
 	// init echo
 	e := echo.New()
 
 	// repository
-	messageRepo := _messageRepo.NewMessageRepository(conn)
+	messageRepo := _messageRepo.NewMessageRepository(w)
 
 	// usecase
 	timeoutContext := 20 * time.Second
@@ -56,7 +57,7 @@ func main() {
 	if err := e.Shutdown(ctx); err != nil {
 		log.Fatal("Shutting down the server error : " + err.Error())
 	} else {
-		if err := conn.Close(); err != nil {
+		if err := w.Close(); err != nil {
 			log.Fatal("failed to close writer:", err)
 		}
 		log.Fatal("Shutting down the server")
