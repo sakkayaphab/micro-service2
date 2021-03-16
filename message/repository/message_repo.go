@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/sakkayaphab/micro-service2/domain"
 	"github.com/segmentio/kafka-go"
 )
@@ -26,7 +25,6 @@ func (r *messageRepository) Store(c context.Context,message *domain.Message) err
 	}
 
 	patition := r.conn.Balancer.Balance(kafka.Message{Value: jsonData},1,2,3)
-	fmt.Println(patition)
 	err = r.conn.WriteMessages(context.Background(),
 		kafka.Message{Value: jsonData,Partition: patition},
 	)
